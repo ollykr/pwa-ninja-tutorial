@@ -10,3 +10,8 @@ self.addEventListener("install", (evt) => {
 self.addEventListener("activate", (evt) => {
 	console.log("Service Worker has been activated");
 });
+// fetch event
+// we update the code so SW is re-installed but not activated , waiting to be activated
+self.addEventListener("fetch", (evt) => {
+	console.log("fetch event", evt);
+});
