@@ -37,4 +37,14 @@ self.addEventListener("activate", (evt) => {
 // we update the code so SW is re-installed but not activated , waiting to be activated
 self.addEventListener("fetch", (evt) => {
 	// console.log("fetch event", evt);
+	// fetch an event and respond with our own custom event, a resource from our cache
+	evt.respondWith(
+		// if cache matches a request
+		// cachesRes is a response for existing/matching assets that we pre-cache, otherwise cacheRes is empty
+		caches.match(evt.request).then((cachesRes) => {
+			// no need to go to a serverm we get from our cache
+			// but we don't want to return something empty like cacheRes that doesn't contain mathicng assts so we use pipe to get an initial fetch (froma server)
+			return cachesRes || fetch(evt.request);
+		})
+	);
 });
