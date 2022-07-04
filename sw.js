@@ -1,4 +1,5 @@
-const staticCacheName = "site-static";
+// change site-static to site-static-v1 to re-cache it on install , then users will see a title "Recipies" appear (index.html updated, plus any updates in other files). However, we also need to delete an old cache version before that
+const staticCacheName = "site-static-v2";
 // store requests urls users can make
 const assets = [
 	"/",
@@ -20,7 +21,7 @@ self.addEventListener("install", (evt) => {
 	// Reaching out to cache API
 	// it opens a "staticCacheName" cache and use it, if it exists, otherwise it creates it
 	// this is async task
-	evt.waitUntill(
+	evt.waitUntil(
 		caches.open(staticCacheName).then((cache) => {
 			console.log("caching shell assets");
 			cache.addAll(assets);
@@ -32,6 +33,21 @@ self.addEventListener("install", (evt) => {
 // automatically becomes activated
 self.addEventListener("activate", (evt) => {
 	// console.log("Service Worker has been activated");
+	// delete an old cache version
+	// extend "activate" because not all may be made available when we simply "activate" it
+	evt.waitUntil(
+		// looking for keys , in out case 2 caches - site-static and site-static-v1
+		caches.keys().then((keys) => {
+			// console.log(keys);
+			// cycle through caches and filter out anything but our latest site-static-v1
+			// it requires to do several async tasks as they may be several old caches
+			return Promise.all(
+				keys
+					.filter((key) => key !== staticCacheName)
+					.map((key) => caches.delete(key))
+			);
+		})
+	);
 });
 // fetch event
 // we update the code so SW is re-installed but not activated , waiting to be activated
