@@ -1,5 +1,6 @@
 // change site-static to site-static-v1 to re-cache it on install , then users will see a title "Recipies" appear (index.html updated, plus any updates in other files). However, we also need to delete an old cache version before that
 const staticCacheName = "site-static-v2";
+const dynamicCache = "site-dynamic-v1";
 // store requests urls users can make
 const assets = [
 	"/",
@@ -58,9 +59,20 @@ self.addEventListener("fetch", (evt) => {
 		// if cache matches a request
 		// cachesRes is a response for existing/matching assets that we pre-cache, otherwise cacheRes is empty
 		caches.match(evt.request).then((cachesRes) => {
-			// no need to go to a serverm we get from our cache
+			// no need to go to a server we get from our cache
 			// but we don't want to return something empty like cacheRes that doesn't contain mathicng assts so we use pipe to get an initial fetch (froma server)
-			return cachesRes || fetch(evt.request);
+			// we use it to fetch cached versions of any html page as well that was not cached previously when we cached some other assets, or pages (in caches "activate")
+			// here we fetch latest cached version, if it is not there, we fetch it from a server
+			return (
+				cachesRes ||
+				fetch(evt.request).then((fetchRes) => {
+					return caches.open(dynamicCache).then((cache) => {
+						// key/value pair
+						cache.put(evt.request.url, fetchRes.clone());
+						return fetchRes;
+					});
+				})
+			);
 		})
 	);
 });
