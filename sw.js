@@ -1,6 +1,6 @@
 // change site-static to site-static-v1 to re-cache it on install , then users will see a title "Recipies" appear (index.html updated, plus any updates in other files). However, we also need to delete an old cache version before that
 const staticCacheName = "site-static-v2";
-const dynamicCache = "site-dynamic-v1";
+const dynamicCacheName = "site-dynamic-v1";
 // store requests urls users can make
 const assets = [
 	"/",
@@ -13,6 +13,7 @@ const assets = [
 	"/img/dish.png",
 	"https://fonts.googleapis.com/icon?family=Material+Icons",
 	"https://fonts.gstatic.com/s/materialicons/v47/flUhRq6tzZclQEJ-Vdg-IuiaDsNcIhQ8tQ.woff2",
+	"/pages/fallback.html",
 ];
 // install service worker
 // "self" refers to the service worker itself
@@ -44,7 +45,7 @@ self.addEventListener("activate", (evt) => {
 			// it requires to do several async tasks as they may be several old caches
 			return Promise.all(
 				keys
-					.filter((key) => key !== staticCacheName)
+					.filter((key) => key !== staticCacheName && key !== dynamicCacheName)
 					.map((key) => caches.delete(key))
 			);
 		})
@@ -58,21 +59,24 @@ self.addEventListener("fetch", (evt) => {
 	evt.respondWith(
 		// if cache matches a request
 		// cachesRes is a response for existing/matching assets that we pre-cache, otherwise cacheRes is empty
-		caches.match(evt.request).then((cachesRes) => {
-			// no need to go to a server we get from our cache
-			// but we don't want to return something empty like cacheRes that doesn't contain mathicng assts so we use pipe to get an initial fetch (froma server)
-			// we use it to fetch cached versions of any html page as well that was not cached previously when we cached some other assets, or pages (in caches "activate")
-			// here we fetch latest cached version, if it is not there, we fetch it from a server
-			return (
-				cachesRes ||
-				fetch(evt.request).then((fetchRes) => {
-					return caches.open(dynamicCache).then((cache) => {
-						// key/value pair
-						cache.put(evt.request.url, fetchRes.clone());
-						return fetchRes;
-					});
-				})
-			);
-		})
+		caches
+			.match(evt.request)
+			.then((cacheRes) => {
+				// no need to go to a server we get from our cache
+				// but we don't want to return something empty like cacheRes that doesn't contain mathicng assts so we use pipe to get an initial fetch (froma server)
+				// we use it to fetch cached versions of any html page as well that was not cached previously when we cached some other assets, or pages (in caches "activate")
+				// here we fetch latest cached version, if it is not there, we fetch it from a server
+				return (
+					cacheRes ||
+					fetch(evt.request).then((fetchRes) => {
+						return caches.open(dynamicCacheName).then((cache) => {
+							// key/value pair
+							cache.put(evt.request.url, fetchRes.clone());
+							return fetchRes;
+						});
+					})
+				);
+			})
+			.catch(() => caches.match("/pages/fallback.html"))
 	);
 });
