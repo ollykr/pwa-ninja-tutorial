@@ -15,6 +15,23 @@ const assets = [
 	"https://fonts.gstatic.com/s/materialicons/v47/flUhRq6tzZclQEJ-Vdg-IuiaDsNcIhQ8tQ.woff2",
 	"/pages/fallback.html",
 ];
+
+// cache size limit
+// "name" is either staticCacheName or dynamicCacheName
+const limitCacheSize = (name, size) => {
+	// open up whatever cache we pass in
+	caches.open(name).then((cache) => {
+		// get keys
+		cache.keys().then((keys) => {
+			// an array
+			// if the array is over "size", then start deleting caches from the oldest on
+			if (keys.length > size) {
+				// .then(limitCacheSize(name, size)); recalling this function until "keys.length > size" is no longer true
+				cache.delete(keys[0]).then(limitCacheSize(name, size));
+			}
+		});
+	});
+};
 // install service worker
 // "self" refers to the service worker itself
 // later on this is where we cache static assets that don't change much/often, e.g css and images
@@ -72,6 +89,8 @@ self.addEventListener("fetch", (evt) => {
 						return caches.open(dynamicCacheName).then((cache) => {
 							// key/value pair
 							cache.put(evt.request.url, fetchRes.clone());
+							// call limitCacheSize function for "dynamicCacheName" cache ("name") and max cache items size is 3, it is never going to be more than 3 items ("size")
+							limitCacheSize(dynamicCacheName, 15);
 							return fetchRes;
 						});
 					})
@@ -81,6 +100,7 @@ self.addEventListener("fetch", (evt) => {
 				// if .html is not inside url, return -1, otherwise send a fallback page
 				// This way if we need to request images to cache, we don't get a fallback page, only if a request is to html
 				// howevere, we can use this conditioning, if we want to return for PNG some dummy cached image placeholders
+				//
 				if (evt.request.url.indexOf(".html") > -1) {
 					return caches.match("/pages/fallback.html");
 				}
