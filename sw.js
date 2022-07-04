@@ -77,6 +77,13 @@ self.addEventListener("fetch", (evt) => {
 					})
 				);
 			})
-			.catch(() => caches.match("/pages/fallback.html"))
+			.catch(() => {
+				// if .html is not inside url, return -1, otherwise send a fallback page
+				// This way if we need to request images to cache, we don't get a fallback page, only if a request is to html
+				// howevere, we can use this conditioning, if we want to return for PNG some dummy cached image placeholders
+				if (evt.request.url.indexOf(".html") > -1) {
+					return caches.match("/pages/fallback.html");
+				}
+			})
 	);
 });
