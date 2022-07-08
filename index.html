@@ -126,7 +126,25 @@
 				</div>
 			</form>
 		</div>
+		<script src="https://www.gstatic.com/firebasejs/9.9.0/firebase-app.js"></script>
+		<script src="https://www.gstatic.com/firebasejs/9.9.0/firebase-firestore.js"></script>
+		<script>
+			// Your web app's Firebase configuration
+			const firebaseConfig = {
+				apiKey: "AIzaSyBw84Z46YzuOs8kvss892WCWKxmDPRRJVY",
+				authDomain: "food-ninja-pwa-35c41.firebaseapp.com",
+				projectId: "food-ninja-pwa-35c41",
+				storageBucket: "food-ninja-pwa-35c41.appspot.com",
+				messagingSenderId: "547242614407",
+				appId: "1:547242614407:web:bab52f2bbb619d0f032222",
+			};
+
+			// Initialize Firebase
+			const app = initializeApp(firebaseConfig);
+			const db = firebase.firestore();
+		</script>
 		<script src="/js/app.js"></script>
+		<script src="/js/db.js"></script>
 		<script src="/js/ui.js"></script>
 	</body>
 </html>
